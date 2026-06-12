@@ -208,7 +208,7 @@ jobs:
       - name: Build
         run: |
           export MAKE_GOALS=Image
-          export KCFLAGS="-Wno-error=unused-variable -Wno-error=unused-label"
+          export KCFLAGS="-Wno-error=unused-variable -Wno-error=unused-label -Wno-error=unused-function"
           set -o pipefail
           cd vendor_platform
           cp ../repo/custom_build_kernel.sh ./kernel/build/custom_build_kernel.sh
@@ -218,11 +218,17 @@ jobs:
           LTO=thin ./kernel/build/custom_build_kernel.sh
           echo "Build exit code: $?"
           echo "=== manual make Image ==="
-          KOBJ="out_krn/target/product/mgk_64_k510/obj/KERNEL_OBJ/kernel-5.10"
-          make O="$KOBJ" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- LLVM=1 LLVM_IAS=1 KCFLAGS="-Wno-error=unused-variable -Wno-error=unused-label" -j$(nproc) Image 2>&1 | tail -10
+          cd kernel/kernel-5.10
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          OUT="../out_krn/target/product/mgk_64_k510/obj/KERNEL_OBJ/kernel-5.10"
+          cp "$OUT/mgk_64_k510.config" "$OUT/.config" 2>/dev/null || true
+          make O="$OUT" LLVM=1 LLVM_IAS=1 KCFLAGS="$KCFLAGS" olddefconfig 2>&1 | tail -3
+          make O="$OUT" LLVM=1 LLVM_IAS=1 KCFLAGS="$KCFLAGS" -j$(nproc) Image 2>&1 | tail -5
+          cd ..
           echo "=== Kernel images ==="
-          find out_krn/ -name "Image" -o -name "Image.gz" -o -name "Image.lz4" -o -name "vmlinux" 2>/dev/null | head -10
-          ls -la "$KOBJ"/arch/arm64/boot/Image 2>/dev/null || echo "Image not found at $KOBJ/arch/arm64/boot/Image"
+          find out_krn/ -name "Image" -o -name "Image.gz" -o -name "vmlinux" 2>/dev/null | head -10
+          ls -la "$OUT"/arch/arm64/boot/Image 2>/dev/null || echo "Still no Image"
 
       - name: Make AnyKernel3
         run: |
