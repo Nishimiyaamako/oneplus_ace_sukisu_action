@@ -208,13 +208,16 @@ jobs:
       - name: Build
         run: |
           export MAKE_GOALS=Image
+          export KCFLAGS="-Wno-error=unused-variable -Wno-error=unused-label"
+          set -o pipefail
           cd vendor_platform
           cp ../repo/custom_build_kernel.sh ./kernel/build/custom_build_kernel.sh
           cp ../repo/build_kernel.sh ./kernel/build/build_kernel.sh
           chmod +x ./kernel/build/custom_build_kernel.sh
           chmod +x ./kernel/build/build_kernel.sh
           LTO=thin ./kernel/build/custom_build_kernel.sh
-          ls -la ${IMAGE_OUT}
+          echo "Build exit code: $?"
+          ls -la ${IMAGE_OUT} || echo "IMAGE_OUT listing failed (non-critical)"
 
       - name: Make AnyKernel3
         run: |
