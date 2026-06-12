@@ -217,7 +217,14 @@ jobs:
           chmod +x ./kernel/build/build_kernel.sh
           LTO=thin ./kernel/build/custom_build_kernel.sh
           echo "Build exit code: $?"
-          ls -la ${IMAGE_OUT} || echo "IMAGE_OUT listing failed (non-critical)"
+          echo "=== Kernel images ==="
+          find out_krn/ -name "Image" -o -name "Image.gz" -o -name "Image.lz4" -o -name "vmlinux" 2>/dev/null | head -20
+          echo "=== Large files (>1MB) in out_krn ==="
+          find out_krn/ -type f -size +1M 2>/dev/null | head -20
+          echo "=== boot dirs ==="
+          find out_krn/ -type d -name "boot" 2>/dev/null
+          echo "=== *.gz files ==="
+          find out_krn/ -name "*.gz" 2>/dev/null | head -10 || echo "IMAGE_OUT listing failed (non-critical)"
 
       - name: Make AnyKernel3
         run: |
