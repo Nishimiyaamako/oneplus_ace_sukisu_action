@@ -224,21 +224,26 @@ jobs:
           git clone https://github.com/Numbersf/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
           set -e
-          KERNEL_IMG=$(find vendor_platform/out_krn -name "Image.gz" -o -name "Image" | grep -v ".dtb" | head -1)
+          echo "=== Searching for kernel Image ==="
+          find vendor_platform -name "Image" -type f 2>/dev/null | grep -v "dtb\|dts\|\.o\." | head -10
+          echo "=== Searching for Image.gz ==="
+          find vendor_platform -name "Image.gz" -type f 2>/dev/null | head -10
+          KERNEL_IMG=$(find vendor_platform -name "Image" -type f 2>/dev/null | grep -vE "dtb|dts|\.o\.|\.o$" | head -1)
           if [ -z "$KERNEL_IMG" ]; then
-            echo "ERROR: Kernel image not found! Dump:"
-            find . -name "Image*" -type f 2>/dev/null | head -10
-            echo "--- out_krn tree ---"
-            ls -R vendor_platform/out_krn/ 2>/dev/null | head -80
+            KERNEL_IMG=$(find vendor_platform -name "Image.gz" -type f 2>/dev/null | head -1)
+          fi
+          if [ -z "$KERNEL_IMG" ]; then
+            echo "FATAL: Kernel image not found anywhere in vendor_platform!"
+            find vendor_platform -name "Image*" -type f 2>/dev/null | head -20
+            echo "--- listing kernel output dirs ---"
+            find vendor_platform/out_krn -maxdepth 8 -type d -name "boot" 2>/dev/null | head -5
+            ls -la vendor_platform/out_krn/target/product/out_krn/ 2>/dev/null | head -20
+            ls -la vendor_platform/out_krn/target/product/kernel/ 2>/dev/null | head -20
             exit 1
           fi
           echo "Found: $KERNEL_IMG"
-          if echo "$KERNEL_IMG" | grep -q ".gz$"; then
-            cp -f "$KERNEL_IMG" ./AnyKernel3/
-          else
-            cp -f "$KERNEL_IMG" ./AnyKernel3/Image
-            gzip -f ./AnyKernel3/Image
-          fi
+          cp -f "$KERNEL_IMG" ./AnyKernel3/Image
+          gzip -f ./AnyKernel3/Image
           ls -la ./AnyKernel3/Image* ./AnyKernel3/Image.gz 2>/dev/null
 
       # 下载 SUSFS 模块（Release）
