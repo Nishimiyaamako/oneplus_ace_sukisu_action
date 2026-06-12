@@ -171,6 +171,24 @@ jobs:
           if [ "${{ github.event.inputs.BBG }}" = "true" ]; then
             echo "CONFIG_BBG=y" >> "$CONFIG_FILE"
           fi
+          # Docker support config
+          echo "# Docker / Container runtime support" >> "$CONFIG_FILE"
+          echo "CONFIG_CGROUP_DEVICE=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CGROUP_PIDS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CGROUP_NET_CLASSID=y" >> "$CONFIG_FILE"
+          echo "CONFIG_CGROUP_BPF=y" >> "$CONFIG_FILE"
+          echo "CONFIG_BRIDGE=y" >> "$CONFIG_FILE"
+          echo "CONFIG_VETH=y" >> "$CONFIG_FILE"
+          echo "CONFIG_IP_NF_NAT=y" >> "$CONFIG_FILE"
+          echo "CONFIG_NETFILTER_XT_MATCH_IPVS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_IP_VS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_IP_VS_PROTO_TCP=y" >> "$CONFIG_FILE"
+          echo "CONFIG_IP_VS_PROTO_UDP=y" >> "$CONFIG_FILE"
+          echo "CONFIG_NET_IPIP=y" >> "$CONFIG_FILE"
+          echo "CONFIG_IP_NF_TARGET_MASQUERADE=y" >> "$CONFIG_FILE"
+          echo "CONFIG_NETFILTER_XT_MATCH_ADDRTYPE=y" >> "$CONFIG_FILE"
+          echo "CONFIG_OVERLAY_FS=y" >> "$CONFIG_FILE"
+          echo "CONFIG_BLK_DEV_DM=y" >> "$CONFIG_FILE"
           # Remove check_defconfig
           sed -i 's/check_defconfig//' ./build.config.gki
 
