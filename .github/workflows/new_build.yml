@@ -217,44 +217,29 @@ jobs:
           chmod +x ./kernel/build/build_kernel.sh
           LTO=thin ./kernel/build/custom_build_kernel.sh
           echo "Build exit code: $?"
-          echo "=== manual make Image ==="
-          cd kernel/kernel-5.10
-          export ARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          OUT="../out_krn/target/product/mgk_64_k510/obj/KERNEL_OBJ/kernel-5.10"
-          cp "$OUT/mgk_64_k510.config" "$OUT/.config" 2>/dev/null || true
-          make O="$OUT" LLVM=1 LLVM_IAS=1 KCFLAGS="$KCFLAGS" olddefconfig 2>&1 | tail -3
-          make O="$OUT" LLVM=1 LLVM_IAS=1 KCFLAGS="$KCFLAGS" -j$(nproc) Image 2>&1 | tail -5
-          cd ..
+          KOBJ="out_krn/target/product/mgk_64_k510/obj/KERNEL_OBJ/kernel-5.10"
           echo "=== Kernel images ==="
-          find out_krn/ -name "Image" -o -name "Image.gz" -o -name "vmlinux" 2>/dev/null | head -10
-          ls -la "$OUT"/arch/arm64/boot/Image 2>/dev/null || echo "Still no Image"
+          ls -la "$KOBJ"/arch/arm64/boot/Image* 2>/dev/null || echo "No Image found, listing:"
+          find out_krn/ -name "Image*" 2>/dev/null | head -10
 
       - name: Make AnyKernel3
         run: |
           git clone https://github.com/Numbersf/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
           set -e
-          echo "=== Searching for kernel Image ==="
-          find vendor_platform -name "Image" -type f 2>/dev/null | grep -v "dtb\|dts\|\.o\." | head -10
-          echo "=== Searching for Image.gz ==="
-          find vendor_platform -name "Image.gz" -type f 2>/dev/null | head -10
-          KERNEL_IMG=$(find vendor_platform -name "Image" -type f 2>/dev/null | grep -vE "dtb|dts|\.o\.|\.o$" | head -1)
-          if [ -z "$KERNEL_IMG" ]; then
-            KERNEL_IMG=$(find vendor_platform -name "Image.gz" -type f 2>/dev/null | head -1)
-          fi
-          if [ -z "$KERNEL_IMG" ]; then
-            echo "FATAL: Kernel image not found anywhere in vendor_platform!"
-            find vendor_platform -name "Image*" -type f 2>/dev/null | head -20
-            echo "--- listing kernel output dirs ---"
-            find vendor_platform/out_krn -maxdepth 8 -type d -name "boot" 2>/dev/null | head -5
-            ls -la vendor_platform/out_krn/target/product/out_krn/ 2>/dev/null | head -20
-            ls -la vendor_platform/out_krn/target/product/kernel/ 2>/dev/null | head -20
+          KOBJ="vendor_platform/out_krn/target/product/mgk_64_k510/obj/KERNEL_OBJ/kernel-5.10"
+          if [ -f "$KOBJ/arch/arm64/boot/Image.gz" ]; then
+            cp -f "$KOBJ/arch/arm64/boot/Image.gz" ./AnyKernel3/
+            echo "Copied Image.gz from $KOBJ"
+          elif [ -f "$KOBJ/arch/arm64/boot/Image" ]; then
+            cp -f "$KOBJ/arch/arm64/boot/Image" ./AnyKernel3/
+            gzip -f ./AnyKernel3/Image
+            echo "Copied & compressed Image from $KOBJ"
+          else
+            echo "FATAL: No kernel image at $KOBJ"
+            find vendor_platform/out_krn -name "Image*" 2>/dev/null | head -5
             exit 1
           fi
-          echo "Found: $KERNEL_IMG"
-          cp -f "$KERNEL_IMG" ./AnyKernel3/Image
-          gzip -f ./AnyKernel3/Image
           ls -la ./AnyKernel3/Image* ./AnyKernel3/Image.gz 2>/dev/null
 
       # 下载 SUSFS 模块（Release）
