@@ -220,7 +220,23 @@ jobs:
         run: |
           git clone https://github.com/Numbersf/AnyKernel3 --depth=1
           rm -rf ./AnyKernel3/.git
-          cp -f vendor_platform/out_krn/target/product/mgk_64_k510/obj/KERNEL_OBJ/kernel-5.10/arch/arm64/boot/Image.gz ./AnyKernel3/
+          set -e
+          KERNEL_IMG=$(find vendor_platform/out_krn -name "Image.gz" -o -name "Image" | grep -v ".dtb" | head -1)
+          if [ -z "$KERNEL_IMG" ]; then
+            echo "ERROR: Kernel image not found! Dump:"
+            find . -name "Image*" -type f 2>/dev/null | head -10
+            echo "--- out_krn tree ---"
+            ls -R vendor_platform/out_krn/ 2>/dev/null | head -80
+            exit 1
+          fi
+          echo "Found: $KERNEL_IMG"
+          if echo "$KERNEL_IMG" | grep -q ".gz$"; then
+            cp -f "$KERNEL_IMG" ./AnyKernel3/
+          else
+            cp -f "$KERNEL_IMG" ./AnyKernel3/Image
+            gzip -f ./AnyKernel3/Image
+          fi
+          ls -la ./AnyKernel3/Image* ./AnyKernel3/Image.gz 2>/dev/null
 
       # 下载 SUSFS 模块（Release）
       - name: Download Latest SUSFS Module from Release
