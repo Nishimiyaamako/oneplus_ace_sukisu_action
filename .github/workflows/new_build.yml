@@ -57,14 +57,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OnePlusOSS/android_vendor_mediatek_kernel_modules_mt6895
-          ref: oneplus/mt6895_v_15.0.0_ace
+          ref: oneplus/mt6895_v_13.0.0_ace
           path: vendor_platform
 
       - name: 拉取 kernel
         uses: actions/checkout@v4
         with:
           repository: OnePlusOSS/android_kernel_5.10_oneplus_mt6895
-          ref: oneplus/mt6895_v_15.0.0_ace
+          ref: oneplus/mt6895_v_13.0.0_ace
           path: vendor_platform/kernel-5.10
 
       - name: 拉取仓库
