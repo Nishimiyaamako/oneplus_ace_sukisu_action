@@ -10,6 +10,7 @@ on:
         options:
           - "sukisu"
           - "ksunext"
+          - "docker"
       VFS:
         type: boolean
         description: "是否启用手动钩子"
@@ -73,6 +74,7 @@ jobs:
 
       # 添加 SukiSU Ultra
       - name: Add KernelSU-SukiSU Ultra
+        if: ${{ github.event.inputs.VARIANT != 'docker' }}
         id: ksu_version
         run: |
           cd vendor_platform/kernel-5.10
@@ -98,6 +100,7 @@ jobs:
           git commit -m "Force remove -dirty suffix from kernel version"
 
       - name: Apply SUSFS Patch
+        if: ${{ github.event.inputs.VARIANT != 'docker' }}
         run: |
           cd vendor_platform
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b gki-android12-5.10
@@ -115,6 +118,7 @@ jobs:
           wget -O- https://github.com/vc-teahouse/Baseband-guard/raw/main/setup.sh | bash
 
       - name: Apply Hide Stuff Patches
+        if: ${{ github.event.inputs.VARIANT != 'docker' }}
         run: |
           cd vendor_platform
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
@@ -124,7 +128,7 @@ jobs:
           patch -p1 -F 3 < 69_hide_stuff.patch
 
       - name: Apply VFS
-        if: ${{ github.event.inputs.VFS == 'true' }}
+        if: ${{ github.event.inputs.VFS == 'true' && github.event.inputs.VARIANT != 'docker' }}
         run: |
           cd vendor_platform/kernel-5.10
           cp ../SukiSU_patch/hooks/syscall_hooks.patch ./
@@ -138,40 +142,42 @@ jobs:
           cd vendor_platform/kernel-5.10
           CONFIG_FILE=./arch/arm64/configs/mgk_64_k510_defconfig
           KERNEL_VERSION=5.10
-          # SukiSU Ultra config
-          echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
-          if [ "${{ github.event.inputs.VFS }}" = "false" ]; then
-            echo "CONFIG_KPROBES=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$CONFIG_FILE"
+          if [ "${{ github.event.inputs.VARIANT }}" != "docker" ]; then
+            # SukiSU Ultra config
+            echo "CONFIG_KSU=y" >> "$CONFIG_FILE"
+            if [ "${{ github.event.inputs.VFS }}" = "false" ]; then
+              echo "CONFIG_KPROBES=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$CONFIG_FILE"
+            fi
+            # VFS config
+            if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+              echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$CONFIG_FILE"
+            fi
+            # SUSFS config
+            if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
+              echo "CONFIG_KSU_SUSFS=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$CONFIG_FILE"
+              echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$CONFIG_FILE"
+            fi
+            # BBG config
+            if [ "${{ github.event.inputs.BBG }}" = "true" ]; then
+              echo "CONFIG_BBG=y" >> "$CONFIG_FILE"
+            fi
           fi
-          # VFS config
-          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
-            echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_MANUAL_HOOK=y" >> "$CONFIG_FILE"
-          fi
-          # SUSFS config
-          if [ "${{ github.event.inputs.VFS }}" = "true" ]; then
-            echo "CONFIG_KSU_SUSFS=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=n" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_AUTO_ADD_TRY_UMOUNT_FOR_BIND_MOUNT=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y" >> "$CONFIG_FILE"
-            echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$CONFIG_FILE"
-          fi
-          # BBG config
-          if [ "${{ github.event.inputs.BBG }}" = "true" ]; then
-            echo "CONFIG_BBG=y" >> "$CONFIG_FILE"
-          fi
-          # Docker support config
+          # Docker support config (always enabled)
           echo "# Docker / Container runtime support" >> "$CONFIG_FILE"
           echo "CONFIG_CGROUP_DEVICE=y" >> "$CONFIG_FILE"
           echo "CONFIG_CGROUP_PIDS=y" >> "$CONFIG_FILE"
