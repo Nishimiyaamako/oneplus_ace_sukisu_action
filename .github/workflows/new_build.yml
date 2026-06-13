@@ -57,14 +57,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OnePlusOSS/android_vendor_mediatek_kernel_modules_mt6895
-          ref: oneplus/mt6895_v_14.0.0_ace
+          ref: oneplus/mt6895_v_15.0.0_ace
           path: vendor_platform
 
       - name: 拉取 kernel
         uses: actions/checkout@v4
         with:
           repository: OnePlusOSS/android_kernel_5.10_oneplus_mt6895
-          ref: oneplus/mt6895_v_14.0.0_ace
+          ref: oneplus/mt6895_s_12.1_oneplus_ace_race
           path: vendor_platform/kernel-5.10
 
       - name: 拉取仓库
@@ -220,6 +220,7 @@ jobs:
           mkdir -p ./kernel/build
           cp ../repo/custom_build_kernel.sh ./kernel/build/custom_build_kernel.sh
           cp ../repo/build_kernel.sh ./kernel/build/build_kernel.sh
+          sed -i 's/--kernel-build-config-overlays ""//g' ./kernel/build/custom_build_kernel.sh
           chmod +x ./kernel/build/custom_build_kernel.sh
           chmod +x ./kernel/build/build_kernel.sh
           LTO=thin ./kernel/build/custom_build_kernel.sh
