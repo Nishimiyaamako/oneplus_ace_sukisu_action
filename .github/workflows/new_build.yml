@@ -226,8 +226,14 @@ jobs:
           LTO=thin ./kernel/build/custom_build_kernel.sh
           echo "Build exit code: $?"
           KOBJ="out_krn/target/product/mgk_64_k510/obj/KERNEL_OBJ/kernel-5.10"
-          echo "=== Manual make Image ==="
-          cd kernel/kernel-5.10 && make O="../../$KOBJ" ARCH=arm64 LLVM=1 LLVM_IAS=1 Image 2>&1 | tail -5 && cd ../..
+          echo "=== Pure GCC build ==="
+          cd kernel/kernel-5.10
+          sudo apt-get install -y gcc-aarch64-linux-gnu 2>&1 | tail -1
+          make O="../../$KOBJ" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- olddefconfig 2>&1 | tail -3
+          make O="../../$KOBJ" ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc) Image 2>&1 | tee /tmp/make.log | tail -5
+          echo "=== First 10 errors ==="
+          grep "error:" /tmp/make.log | head -10
+          cd ../..
           echo "=== Kernel images ==="
           ls -la "$KOBJ"/arch/arm64/boot/Image* 2>/dev/null || echo "No Image found"
 
