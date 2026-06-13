@@ -64,7 +64,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: OnePlusOSS/android_kernel_5.10_oneplus_mt6895
-          ref: oneplus/mt6895_v_14.0.0_ace
+          ref: oneplus/mt6895_s_12.1_oneplus_ace_race
           path: vendor_platform/kernel-5.10
 
       - name: 拉取仓库
@@ -200,7 +200,7 @@ jobs:
 
       - name: Get Clang and build tools
         run: |
-          git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 --revision b669748458572622ed716407611633c5415da25c --depth=1 vendor_platform/kernel/prebuilts-master/clang/host/linux-x86
+          git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 --revision 69d2a4fcd82fe090105da676af0cf2907f35c005 --depth=1 vendor_platform/kernel/prebuilts-master/clang/host/linux-x86
           git clone https://github.com/LineageOS/android_prebuilts_build-tools.git --depth=1 vendor_platform/kernel/prebuilts/build-tools
       
       - name: Fetch needed files
