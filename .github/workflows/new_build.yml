@@ -227,7 +227,7 @@ jobs:
           echo "Build exit code: $?"
           KOBJ="out_krn/target/product/mgk_64_k510/obj/KERNEL_OBJ/kernel-5.10"
           echo "=== Manual make Image ==="
-          cd kernel/kernel-5.10 && make O="../$KOBJ" ARCH=arm64 LLVM=1 LLVM_IAS=1 Image 2>&1 | tail -5 && cd ../..
+          cd kernel/kernel-5.10 && make O="../../$KOBJ" ARCH=arm64 LLVM=1 LLVM_IAS=1 Image 2>&1 | tail -5 && cd ../..
           echo "=== Kernel images ==="
           ls -la "$KOBJ"/arch/arm64/boot/Image* 2>/dev/null || echo "No Image found"
 
